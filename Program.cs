@@ -63,6 +63,24 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapGet("/", async context =>
+{
+    context.Response.ContentType = "text/html; charset=utf-8";
+    await context.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, "index.html"));
+});
+
+app.MapGet("/monitor", async context =>
+{
+    context.Response.ContentType = "text/html; charset=utf-8";
+    await context.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, "index.html"));
+});
+
+app.MapGet("/registro", async context =>
+{
+    context.Response.ContentType = "text/html; charset=utf-8";
+    await context.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, "registro.html"));
+});
+
 app.MapGet("/health", () => Results.Ok(new { status = "ok", time = DateTime.UtcNow }));
 
 app.MapGet("/api/debug/db-test", async (AppDbContext db) =>
