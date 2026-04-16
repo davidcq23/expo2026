@@ -65,8 +65,6 @@ app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok", time = DateTime.UtcNow }));
 
-using Microsoft.EntityFrameworkCore;
-
 app.MapGet("/api/debug/db-test", async (AppDbContext db) =>
 {
     try
