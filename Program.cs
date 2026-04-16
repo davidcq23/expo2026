@@ -65,22 +65,26 @@ app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok", time = DateTime.UtcNow }));
 
-app.MapGet("/api/debug/db-test", async (AppDbContext db, CancellationToken cancellationToken) =>
+app.MapGet("/api/debug/db-test", async (AppDbContext db) =>
 {
     try
     {
-        var canConnect = await db.Database.CanConnectAsync(cancellationToken);
-        if (!canConnect)
+        var canConnect = await db.Database.CanConnectAsync();
+        return Results.Ok(new
         {
-            return Results.Problem("No se pudo conectar a MySQL.", statusCode: 500);
-        }
-
-        var count = await db.Contacts.CountAsync(cancellationToken);
-        return Results.Ok(new { ok = true, contacts = count });
+            ok = canConnect,
+            connectionString = db.Database.GetConnectionString()
+        });
     }
     catch (Exception ex)
     {
-        return Results.Problem(ex.Message, statusCode: 500);
+        return Results.Json(new
+        {
+            ok = false,
+            error = ex.Message,
+            inner = ex.InnerException?.Message,
+            full = ex.ToString()
+        }, statusCode: 500);
     }
 });
 
