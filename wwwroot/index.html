@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Monitor de clientes</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .panel {
+      background: #111827;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.9rem;
+    }
+    p {
+      margin: 0;
+      color: #94a3b8;
+    }
+    .toolbar {
+      margin: 18px 0;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .left-tools {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    input, button {
+      border: 1px solid #334155;
+      background: #0b1220;
+      color: #e2e8f0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font: inherit;
+    }
+    button {
+      cursor: pointer;
+      background: #1d4ed8;
+      border-color: #1d4ed8;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin: 16px 0 20px;
+    }
+    .stat {
+      background: #0b1220;
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .stat-label {
+      color: #94a3b8;
+      font-size: .9rem;
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid #1f2937;
+      vertical-align: top;
+    }
+    th {
+      background: #0b1220;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: .82rem;
+      font-weight: 600;
+      background: #1f2937;
+    }
+    .badge.ok { background: #14532d; }
+    .badge.no { background: #7f1d1d; }
+    .muted { color: #94a3b8; }
+    .error {
+      margin-top: 14px;
+      color: #fecaca;
+      background: #7f1d1d;
+      padding: 12px;
+      border-radius: 10px;
+      display: none;
+    }
+    .empty {
+      padding: 18px;
+      text-align: center;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="panel">
+      <h1>Monitor de clientes</h1>
+      <p>Vista en tiempo real de los registros guardados en la tabla <strong>contacts</strong>.</p>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Total registros</div>
+          <div class="stat-value" id="totalCount">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Con código usado</div>
+          <div class="stat-value" id="usedCount">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Sin usar código</div>
+          <div class="stat-value" id="unusedCount">0</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="left-tools">
+          <input id="searchInput" type="search" placeholder="Buscar por nombre, correo, teléfono, empresa o código" />
+          <button id="refreshBtn" type="button">Actualizar</button>
+        </div>
+        <div class="muted" id="lastUpdate">Sin actualizar</div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Apellidos</th>
+              <th>Teléfono</th>
+              <th>Correo</th>
+              <th>Empresa</th>
+              <th>Código</th>
+              <th>Uso código</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="9" class="empty">Cargando registros...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="error" id="errorBox"></div>
+    </div>
+  </div>
+
+  <script>
+    const tableBody = document.getElementById('tableBody');
+    const totalCount = document.getElementById('totalCount');
+    const usedCount = document.getElementById('usedCount');
+    const unusedCount = document.getElementById('unusedCount');
+    const lastUpdate = document.getElementById('lastUpdate');
+    const searchInput = document.getElementById('searchInput');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const errorBox = document.getElementById('errorBox');
+
+    let contacts = [];
+
+    function formatDate(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return new Intl.DateTimeFormat('es-ES', {
+        dateStyle: 'short',
+        timeStyle: 'medium'
+      }).format(date);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function updateStats(items) {
+      totalCount.textContent = items.length;
+      const used = items.filter(x => x.usoCodigo).length;
+      usedCount.textContent = used;
+      unusedCount.textContent = items.length - used;
+    }
+
+    function renderRows(items) {
+      if (!items.length) {
+        tableBody.innerHTML = '<tr><td colspan="9" class="empty">No hay registros para mostrar.</td></tr>';
+        return;
+      }
+
+      tableBody.innerHTML = items.map(item => `
+        <tr>
+          <td>${item.id}</td>
+          <td>${escapeHtml(item.nombre)}</td>
+          <td>${escapeHtml(item.apellidos)}</td>
+          <td>${escapeHtml(item.telefono)}</td>
+          <td>${escapeHtml(item.correo)}</td>
+          <td>${escapeHtml(item.empresa || '-')}</td>
+          <td>${escapeHtml(item.codigo)}</td>
+          <td><span class="badge ${item.usoCodigo ? 'ok' : 'no'}">${item.usoCodigo ? 'Sí' : 'No'}</span></td>
+          <td>${escapeHtml(formatDate(item.createdAtUtc))}</td>
+        </tr>
+      `).join('');
+    }
+
+    function applyFilter() {
+      const term = searchInput.value.trim().toLowerCase();
+      const filtered = !term
+        ? contacts
+        : contacts.filter(item => [
+            item.nombre,
+            item.apellidos,
+            item.telefono,
+            item.correo,
+            item.empresa,
+            item.codigo
+          ].some(value => String(value || '').toLowerCase().includes(term)));
+
+      updateStats(filtered);
+      renderRows(filtered);
+    }
+
+    async function loadContacts() {
+      errorBox.style.display = 'none';
+      try {
+        const response = await fetch('/api/monitor/contacts', { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error('No se pudo consultar la información de clientes.');
+        }
+        contacts = await response.json();
+        applyFilter();
+        lastUpdate.textContent = `Última actualización: ${new Intl.DateTimeFormat('es-ES', {
+          dateStyle: 'short',
+          timeStyle: 'medium'
+        }).format(new Date())}`;
+      } catch (error) {
+        tableBody.innerHTML = '<tr><td colspan="9" class="empty">No fue posible cargar los registros.</td></tr>';
+        errorBox.textContent = error.message;
+        errorBox.style.display = 'block';
+      }
+    }
+
+    searchInput.addEventListener('input', applyFilter);
+    refreshBtn.addEventListener('click', loadContacts);
+
+    loadContacts();
+    setInterval(loadContacts, 30000);
+  </script>
+</body>
+</html>
