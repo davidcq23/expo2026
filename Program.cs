@@ -75,10 +75,10 @@ app.MapGet("/monitor", async context =>
     await context.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, "index.html"));
 });
 
-app.MapGet("/registro", async context =>
+app.MapGet("/monitoreo", async context =>
 {
     context.Response.ContentType = "text/html; charset=utf-8";
-    await context.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, "registro.html"));
+    await context.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, "monitoreo.html"));
 });
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok", time = DateTime.UtcNow }));
