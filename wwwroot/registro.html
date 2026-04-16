@@ -459,9 +459,8 @@
       </span>
       <span class="brand-fallback" style="display:none;">TUWA</span>
     </a>
-          
-    </header>
-     <a class="brand" href="https://www.instagram.com/tuwaprocr/" target="_blank" aria-label="TuwaproCR">
+    <footer class="footer">
+      <a class="brand" href="https://www.instagram.com/tuwaprocr/" target="_blank" aria-label="TuwaproCR">
         <img src="/assets/logo_insta.png" alt="TuwaproCR"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
         <span style="color:#fff; font-size:1rem; font-weight:700; margin-left:2px;">@tuwaprocr
@@ -474,6 +473,10 @@
         <span style="color:#fff; font-size:1rem; font-weight:700; margin-left:2px;">@tuwapro
         </span>
       </a>
+      
+    </footer>
+    </header>
+     
 <br/>
     <section class="content" id="registro">
      
@@ -494,7 +497,7 @@
             </div>
             <div class="field">
               <label for="telefono">Teléfono</label>
-              <input id="telefono" name="telefono" type="tel" autocomplete="tel" placeholder="8888-8888" pattern="[0-9]{4}-[0-9]{4}" required />
+              <input id="telefono" name="telefono" type="tel" inputmode="numeric" autocomplete="tel" placeholder="8888-8888" maxlength="9" pattern="[0-9]{4}-[0-9]{4}" required />
             </div>
             <div class="field">
               <label for="correo">Correo</label>
@@ -549,7 +552,23 @@
     const captchaCheck = document.getElementById('captchaCheck');
 
     let emailExists = false;
-
+    const telefonoInput = document.getElementById('telefono');
+    
+    telefonoInput.addEventListener('input', (e) => {
+      let value = e.target.value.replace(/\D/g, ''); // solo números
+    
+      // máximo 8 números
+      if (value.length > 8) {
+        value = value.slice(0, 8);
+      }
+    
+      // formatear con guion
+      if (value.length > 4) {
+        value = value.slice(0, 4) + '-' + value.slice(4);
+      }
+    
+      e.target.value = value;
+    });
     function setResponse(message, type) {
       responseBox.className = `response ${type}`;
       responseBox.textContent = message;
