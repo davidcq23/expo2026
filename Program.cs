@@ -65,15 +65,24 @@ app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok", time = DateTime.UtcNow }));
 
+using Microsoft.EntityFrameworkCore;
+
 app.MapGet("/api/debug/db-test", async (AppDbContext db) =>
 {
     try
     {
-        var canConnect = await db.Database.CanConnectAsync();
+        var conn = db.Database.GetDbConnection();
+        await conn.OpenAsync();
+
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT 1";
+        var result = await cmd.ExecuteScalarAsync();
+
         return Results.Ok(new
         {
-            ok = canConnect,
-            connectionString = db.Database.GetConnectionString()
+            ok = true,
+            result,
+            connectionString = conn.ConnectionString
         });
     }
     catch (Exception ex)
@@ -83,6 +92,7 @@ app.MapGet("/api/debug/db-test", async (AppDbContext db) =>
             ok = false,
             error = ex.Message,
             inner = ex.InnerException?.Message,
+            type = ex.GetType().FullName,
             full = ex.ToString()
         }, statusCode: 500);
     }
