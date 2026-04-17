@@ -269,11 +269,11 @@
           <td>${escapeHtml(formatDate(item.createdAtUtc))}</td>
            <td>
             ${
-              x.usoCodigo
+              item.usoCodigo
                 ? `<span style="opacity:.6;">Aplicado</span>`
                 : `<button
                      type="button"
-                     onclick="applyDiscount(${x.id})"
+                     onclick="applyDiscount(${item.id})"
                      title="Aplicar descuento"
                      style="
                        width:36px;
@@ -324,7 +324,7 @@
           timeStyle: 'medium'
         }).format(new Date())}`;
       } catch (error) {
-        tableBody.innerHTML = '<tr><td colspan="9" class="empty">No fue posible cargar los registros.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="10" class="empty">No fue posible cargar los registros.</td></tr>';
         errorBox.textContent = error.message;
         errorBox.style.display = 'block';
       }
