@@ -177,6 +177,7 @@
               <th>Código</th>
               <th>Uso código</th>
               <th>Fecha</th>
+              <th>Acción</th>
             </tr>
           </thead>
           <tbody id="tableBody">
@@ -200,6 +201,28 @@
     const errorBox = document.getElementById('errorBox');
 
     let contacts = [];
+
+    async function applyDiscount(id) {
+      const confirmed = confirm('¿Aplicar descuento y marcar el código como usado?');
+      if (!confirmed) return;
+    
+      try {
+        const res = await fetch(`/api/contacts/${id}/apply-discount`, {
+          method: 'POST'
+        });
+    
+        const data = await res.json().catch(() => ({}));
+    
+        if (!res.ok) {
+          alert(data.message || 'No fue posible aplicar el descuento.');
+          return;
+        }
+    
+        await loadContacts();
+      } catch (error) {
+        alert('Ocurrió un error de red al aplicar el descuento.');
+      }
+    }
 
     function formatDate(value) {
       if (!value) return '';
@@ -229,7 +252,7 @@
 
     function renderRows(items) {
       if (!items.length) {
-        tableBody.innerHTML = '<tr><td colspan="9" class="empty">No hay registros para mostrar.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="10" class="empty">No hay registros para mostrar.</td></tr>';
         return;
       }
 
@@ -244,6 +267,28 @@
           <td>${escapeHtml(item.codigo)}</td>
           <td><span class="badge ${item.usoCodigo ? 'ok' : 'no'}">${item.usoCodigo ? 'Sí' : 'No'}</span></td>
           <td>${escapeHtml(formatDate(item.createdAtUtc))}</td>
+           <td>
+            ${
+              x.usoCodigo
+                ? `<span style="opacity:.6;">Aplicado</span>`
+                : `<button
+                     type="button"
+                     onclick="applyDiscount(${x.id})"
+                     title="Aplicar descuento"
+                     style="
+                       width:36px;
+                       height:36px;
+                       border:none;
+                       border-radius:999px;
+                       cursor:pointer;
+                       font-size:18px;
+                       font-weight:700;
+                       background:#1f8f4e;
+                       color:#fff;
+                     "
+                   >✓</button>`
+            }
+          </td>
         </tr>
       `).join('');
     }
