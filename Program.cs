@@ -115,6 +115,33 @@ app.MapGet("/api/debug/db-test", async (AppDbContext db) =>
 });
 
 
+app.MapPost("/api/contacts/{id:int}/apply-discount", async (
+    int id,
+    AppDbContext db,
+    CancellationToken cancellationToken) =>
+{
+    var contact = await db.Contacts.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    if (contact is null)
+    {
+        return Results.NotFound(new { message = "Registro no encontrado." });
+    }
+
+    if (contact.UsoCodigo)
+    {
+        return Results.BadRequest(new { message = "El descuento ya fue aplicado para este registro." });
+    }
+
+    contact.UsoCodigo = true;
+    await db.SaveChangesAsync(cancellationToken);
+
+    return Results.Ok(new
+    {
+        message = "Descuento aplicado correctamente.",
+        contact.Id,
+        contact.UsoCodigo
+    });
+});
+
 app.MapGet("/api/monitor/contacts", async (AppDbContext db, CancellationToken cancellationToken) =>
 {
     var contacts = await db.Contacts
