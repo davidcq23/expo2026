@@ -22,7 +22,8 @@ public class ResendEmailService
         CancellationToken cancellationToken = default)
     {
         var apiKey = _configuration["Resend:ApiKey"];
-       
+        var from = _configuration["Resend:From"];
+
         if (string.IsNullOrWhiteSpace(apiKey))
             return (false, null, "Falta Resend:ApiKey");
 
@@ -34,6 +35,7 @@ public class ResendEmailService
 
         var payload = new
         {
+            from,
             to = new[] { toEmail },
             template = new
             {
@@ -51,7 +53,8 @@ public class ResendEmailService
             payload,
             cancellationToken);
 
-        var body = await response.Content.ReadFromJsonAsync<ResendResponse>(cancellationToken: cancellationToken);
+        var body = await response.Content.ReadFromJsonAsync<ResendResponse>(
+            cancellationToken: cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
