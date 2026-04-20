@@ -12,7 +12,7 @@ public class ContactCodeService(AppDbContext dbContext)
     {
         for (var attempt = 0; attempt < 20; attempt++)
         {
-            var code = GenerateCode(8);
+            var code = GenerateCode(5);
             var exists = await dbContext.Contacts.AnyAsync(x => x.Codigo == code, cancellationToken);
             if (!exists)
             {
