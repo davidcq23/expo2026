@@ -15,7 +15,7 @@ public class ResendEmailService
         _configuration = configuration;
     }
 
-    public async Task<(bool ok, string? id, string? error)> SendDiscountEmailAsync(
+    public async Task<(bool ok, string? id, string? error)> SendRegistrationEmailAsync(
         string toEmail,
         string nombre,
         string codigo,
@@ -25,6 +25,9 @@ public class ResendEmailService
        
         if (string.IsNullOrWhiteSpace(apiKey))
             return (false, null, "Falta Resend:ApiKey");
+
+        if (string.IsNullOrWhiteSpace(from))
+            return (false, null, "Falta Resend:From");
 
         var client = _httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
@@ -48,17 +51,17 @@ public class ResendEmailService
             payload,
             cancellationToken);
 
-        var body = await response.Content.ReadFromJsonAsync<ResendSendResponse>(cancellationToken: cancellationToken);
+        var body = await response.Content.ReadFromJsonAsync<ResendResponse>(cancellationToken: cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
-            return (false, null, body?.Message ?? $"Error HTTP {response.StatusCode}");
+            return (false, null, body?.Message ?? $"Error HTTP {(int)response.StatusCode}");
         }
 
         return (true, body?.Id, null);
     }
 
-    private sealed class ResendSendResponse
+    private sealed class ResendResponse
     {
         [JsonPropertyName("id")]
         public string? Id { get; set; }
