@@ -288,37 +288,6 @@ app.MapPatch("/api/contacts/{id:int}/use-code", [Authorize] async (
 });
 
 
-app.MapPost("/api/contacts/{id:int}/send-email", async (
-    int id,
-    AppDbContext db,
-    ResendEmailService resendEmailService,
-    CancellationToken cancellationToken) =>
-{
-    var contact = await db.Contacts.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
-    if (contact is null)
-    {
-        return Results.NotFound(new { message = "Registro no encontrado." });
-    }
-
-    var result = await resendEmailService.SendDiscountEmailAsync(
-        contact.Correo,
-        contact.Nombre,
-        contact.Codigo,
-        cancellationToken);
-
-    if (!result.ok)
-    {
-        return Results.BadRequest(new { message = result.error ?? "No se pudo enviar el correo." });
-    }
-
-    return Results.Ok(new
-    {
-        message = "Correo enviado correctamente.",
-        emailId = result.id,
-        contact.Id,
-        contact.Correo
-    });
-});
 
 app.Run();
 
