@@ -176,6 +176,7 @@ app.MapPost("/api/contacts", async (
     AppDbContext db,
     ContactCodeService codeService,
     CaptchaValidationService captchaService,
+    ResendEmailService resendEmailService,
     ILoggerFactory loggerFactory,
     CancellationToken cancellationToken) =>
 {
@@ -220,6 +221,13 @@ app.MapPost("/api/contacts", async (
         return Results.Conflict(new { message = "No fue posible guardar el contacto por conflicto de datos únicos." });
     }
 
+    var emailResult = await resendEmailService.SendRegistrationEmailAsync(
+        contact.Correo,
+        contact.Nombre,
+        contact.Codigo,
+        cancellationToken);
+
+    
     return Results.Created($"/api/contacts/{contact.Id}", new
     {
         contact.Id,
