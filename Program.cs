@@ -26,6 +26,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
 var jwtSecret = builder.Configuration["Jwt:Secret"]
     ?? throw new InvalidOperationException("Falta Jwt:Secret");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
